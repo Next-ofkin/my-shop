@@ -21,6 +21,15 @@ export const config: VendureConfig = {
         adminApiPath: 'admin-api',
         shopApiPath: 'shop-api',
         trustProxy: IS_DEV ? false : 1,
+        cors: {
+            origin: IS_DEV 
+                ? ['http://localhost:3001', 'http://localhost:3000']
+                : [
+                    process.env.STOREFRONT_URL || 'https://freshmarket.vercel.app',
+                    'https://www.freshmarket.vercel.app',
+                  ].filter(Boolean),
+            credentials: true,
+        },
         ...(IS_DEV ? {
             adminApiDebug: true,
             shopApiDebug: true,
@@ -65,7 +74,7 @@ export const config: VendureConfig = {
         AssetServerPlugin.init({
             route: 'assets',
             assetUploadDir: path.join(__dirname, '../static/assets'),
-            assetUrlPrefix: IS_DEV ? undefined : 'https://www.my-shop.com/assets/',
+            assetUrlPrefix: IS_DEV ? undefined : `${process.env.RAILWAY_PUBLIC_DOMAIN || ''}/assets/`,
         }),
         DefaultSchedulerPlugin.init(),
         DefaultJobQueuePlugin.init({ useDatabaseForBuffer: true }),

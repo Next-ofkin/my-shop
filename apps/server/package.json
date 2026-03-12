@@ -12,7 +12,8 @@
     "start:server": "node ./dist/index.js",
     "start:worker": "node ./dist/index-worker.js",
     "start": "concurrently npm:start:*",
-    "migrate": "ts-node ./src/run-migrations.ts"
+    "migrate": "ts-node ./src/run-migrations.ts",
+    "postinstall": "npm run build"
   },
   "dependencies": {
     "@vendure/asset-server-plugin": "3.5.5",
