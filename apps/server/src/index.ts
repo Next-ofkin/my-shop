@@ -1,7 +1,13 @@
-import { bootstrap } from '@vendure/core';
+import { bootstrap, runMigrations } from '@vendure/core';
 import { config } from './vendure-config';
 
-bootstrap(config).catch(err => {
-    console.error('Failed to bootstrap server:', err);
-    process.exit(1);
-});
+// Run migrations first, then start server
+runMigrations(config)
+    .then(() => {
+        console.log('✅ Migrations completed, starting server...');
+        return bootstrap(config);
+    })
+    .catch(err => {
+        console.error('❌ Failed to start server:', err);
+        process.exit(1);
+    });
