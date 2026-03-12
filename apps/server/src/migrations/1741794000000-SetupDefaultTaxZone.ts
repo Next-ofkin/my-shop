@@ -8,6 +8,58 @@ export class SetupDefaultTaxZone1741794000000 implements MigrationInterface {
     name = 'SetupDefaultTaxZone1741794000000';
 
     public async up(queryRunner: QueryRunner): Promise<void> {
+        // Create Nigeria region if it doesn't exist
+        let nigeriaRegionId: number;
+        const existingNigeria = await queryRunner.query(
+            `SELECT id FROM region WHERE code = 'NG'`
+        );
+
+        if (existingNigeria.length === 0) {
+            const regionResult = await queryRunner.query(
+                `INSERT INTO region ("createdAt", "updatedAt", code, type, enabled, "discriminator") 
+                 VALUES (NOW(), NOW(), 'NG', 'country', true, 'country')
+                 RETURNING id`
+            );
+            nigeriaRegionId = regionResult[0].id;
+            
+            // Add Nigeria translation
+            await queryRunner.query(
+                `INSERT INTO region_translation ("createdAt", "updatedAt", "languageCode", name, "baseId")
+                 VALUES (NOW(), NOW(), 'en', 'Nigeria', $1)`,
+                [nigeriaRegionId]
+            );
+            console.log(`✅ Created Nigeria region with ID: ${nigeriaRegionId}`);
+        } else {
+            nigeriaRegionId = existingNigeria[0].id;
+            console.log(`✅ Nigeria region already exists with ID: ${nigeriaRegionId}`);
+        }
+
+        // Create USA region if it doesn't exist
+        let usaRegionId: number;
+        const existingUSA = await queryRunner.query(
+            `SELECT id FROM region WHERE code = 'US'`
+        );
+
+        if (existingUSA.length === 0) {
+            const regionResult = await queryRunner.query(
+                `INSERT INTO region ("createdAt", "updatedAt", code, type, enabled, "discriminator") 
+                 VALUES (NOW(), NOW(), 'US', 'country', true, 'country')
+                 RETURNING id`
+            );
+            usaRegionId = regionResult[0].id;
+            
+            // Add USA translation
+            await queryRunner.query(
+                `INSERT INTO region_translation ("createdAt", "updatedAt", "languageCode", name, "baseId")
+                 VALUES (NOW(), NOW(), 'en', 'United States', $1)`,
+                [usaRegionId]
+            );
+            console.log(`✅ Created USA region with ID: ${usaRegionId}`);
+        } else {
+            usaRegionId = existingUSA[0].id;
+            console.log(`✅ USA region already exists with ID: ${usaRegionId}`);
+        }
+
         // Check if zone already exists
         const existingZone = await queryRunner.query(
             `SELECT id FROM zone WHERE name = 'Default Zone'`
@@ -29,29 +81,34 @@ export class SetupDefaultTaxZone1741794000000 implements MigrationInterface {
             console.log(`✅ Default Zone already exists with ID: ${zoneId}`);
         }
 
-        // Add Nigeria to the zone (or use a region if available)
-        // First check if region exists
-        const nigeriaRegion = await queryRunner.query(
-            `SELECT id FROM region WHERE code = 'NG'`
+        // Add Nigeria to the zone
+        const existingNigeriaMember = await queryRunner.query(
+            `SELECT * FROM zone_members_region WHERE "zoneId" = $1 AND "regionId" = $2`,
+            [zoneId, nigeriaRegionId]
         );
 
-        if (nigeriaRegion.length > 0) {
-            const regionId = nigeriaRegion[0].id;
-            
-            // Check if already in zone
-            const existingMember = await queryRunner.query(
-                `SELECT * FROM zone_members_region WHERE "zoneId" = $1 AND "regionId" = $2`,
-                [zoneId, regionId]
+        if (existingNigeriaMember.length === 0) {
+            await queryRunner.query(
+                `INSERT INTO zone_members_region ("zoneId", "regionId") 
+                 VALUES ($1, $2)`,
+                [zoneId, nigeriaRegionId]
             );
+            console.log(`✅ Added Nigeria to Default Zone`);
+        }
 
-            if (existingMember.length === 0) {
-                await queryRunner.query(
-                    `INSERT INTO zone_members_region ("zoneId", "regionId") 
-                     VALUES ($1, $2)`,
-                    [zoneId, regionId]
-                );
-                console.log(`✅ Added Nigeria to Default Zone`);
-            }
+        // Add USA to the zone
+        const existingUSAMember = await queryRunner.query(
+            `SELECT * FROM zone_members_region WHERE "zoneId" = $1 AND "regionId" = $2`,
+            [zoneId, usaRegionId]
+        );
+
+        if (existingUSAMember.length === 0) {
+            await queryRunner.query(
+                `INSERT INTO zone_members_region ("zoneId", "regionId") 
+                 VALUES ($1, $2)`,
+                [zoneId, usaRegionId]
+            );
+            console.log(`✅ Added USA to Default Zone`);
         }
 
         // Check if tax category exists
@@ -73,7 +130,7 @@ export class SetupDefaultTaxZone1741794000000 implements MigrationInterface {
             console.log(`✅ Standard Tax Category already exists with ID: ${taxCategoryId}`);
         }
 
-        // Create a tax rate (0% for simplicity, you can change later)
+        // Create or update tax rate with 7.5%
         const existingRate = await queryRunner.query(
             `SELECT id FROM tax_rate WHERE name = 'Default Tax Rate'`
         );
@@ -81,12 +138,17 @@ export class SetupDefaultTaxZone1741794000000 implements MigrationInterface {
         if (existingRate.length === 0) {
             await queryRunner.query(
                 `INSERT INTO tax_rate ("createdAt", "updatedAt", name, enabled, value, "categoryId", "zoneId") 
-                 VALUES (NOW(), NOW(), 'Default Tax Rate', true, 0, $1, $2)`,
+                 VALUES (NOW(), NOW(), 'Default Tax Rate', true, 7.50, $1, $2)`,
                 [taxCategoryId, zoneId]
             );
-            console.log(`✅ Created Default Tax Rate (0%)`);
+            console.log(`✅ Created Default Tax Rate (7.5%)`);
         } else {
-            console.log(`✅ Default Tax Rate already exists`);
+            // Update existing rate to 7.5%
+            await queryRunner.query(
+                `UPDATE tax_rate SET value = 7.50 WHERE id = $1`,
+                [existingRate[0].id]
+            );
+            console.log(`✅ Updated Default Tax Rate to 7.5%`);
         }
 
         // Update channel to use this zone as default tax zone
