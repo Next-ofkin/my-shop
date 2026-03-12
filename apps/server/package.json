@@ -17,6 +17,8 @@
     "start:worker": "node ./dist/index-worker.js",
     "start": "concurrently npm:start:*",
     "migrate": "ts-node ./src/run-migrations.ts",
+    "migrate:prod": "node ./dist/run-migrations.js",
+    "start:with-migrations": "npm run migrate:prod && npm run start",
     "postinstall": "npm run build"
   },
   "dependencies": {
