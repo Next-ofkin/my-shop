@@ -1,4 +1,4 @@
-import { PluginCommonModule, VendurePlugin } from '@vendure/core';
+import { PluginCommonModule, VendurePlugin, Logger } from '@vendure/core';
 import { PaystackService } from './paystack.service';
 import { PaystackController } from './paystack.controller';
 import { paystackPaymentHandler } from './paystack.handler';
@@ -42,9 +42,16 @@ export interface PaystackPluginOptions {
                 const publicKey = process.env.PAYSTACK_PUBLIC_KEY;
 
                 if (!secretKey) {
-                    throw new Error(
-                        'PAYSTACK_SECRET_KEY environment variable is required'
+                    Logger.warn(
+                        'PAYSTACK_SECRET_KEY not set. Paystack payments will not work. Add this environment variable to enable Paystack.',
+                        'PaystackPlugin'
                     );
+                    // Return a dummy service that will fail gracefully
+                    return new PaystackService({
+                        secretKey: 'dummy_key',
+                        publicKey: publicKey || '',
+                        callbackUrl: process.env.PAYSTACK_CALLBACK_URL || '',
+                    });
                 }
 
                 // Store service globally so handler can access it
@@ -55,6 +62,8 @@ export interface PaystackPluginOptions {
                 });
 
                 (global as any).paystackService = service;
+
+                Logger.info('Paystack plugin initialized successfully', 'PaystackPlugin');
 
                 return service;
             },
