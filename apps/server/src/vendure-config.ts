@@ -25,8 +25,10 @@ export const config: VendureConfig = {
             origin: IS_DEV 
                 ? ['http://localhost:3001', 'http://localhost:3000']
                 : [
-                    process.env.STOREFRONT_URL || 'https://freshmarket.vercel.app',
+                    'https://freshmarket.vercel.app',
                     'https://www.freshmarket.vercel.app',
+                    'https://freshmarket-storefront.vercel.app',
+                    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '',
                   ].filter(Boolean),
             credentials: true,
         },
