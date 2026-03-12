@@ -9,6 +9,7 @@ import { SearchInput } from '@/components/layout/search-input';
 import { NavbarUserSkeleton } from '@/components/shared/skeletons/navbar-user-skeleton';
 import { SearchInputSkeleton } from '@/components/shared/skeletons/search-input-skeleton';
 import { Leaf } from "lucide-react";
+import { CurrencySwitcher } from './currency-switcher';
 
 export function Navbar() {
     return (
@@ -36,6 +37,7 @@ export function Navbar() {
                                 <SearchInput />
                             </Suspense>
                         </div>
+                        <CurrencySwitcher />
                         <ThemeSwitcher />
                         <Suspense>
                             <NavbarCart />
