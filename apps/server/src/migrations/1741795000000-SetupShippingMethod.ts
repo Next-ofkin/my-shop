@@ -58,7 +58,7 @@ export class SetupShippingMethod1741795000000 implements MigrationInterface {
         // Create shipping method
         const shippingMethodResult = await queryRunner.query(
             `INSERT INTO shipping_method ("createdAt", "updatedAt", code, "fulfillmentHandlerCode", calculator, checker)
-             VALUES (NOW(), NOW(), 'standard-delivery', 'manual-fulfillment', '{"type": "flat-rate", "rate": 1500}', '{"type": "always-valid"}')
+             VALUES (NOW(), NOW(), 'standard-delivery', 'manual-fulfillment', '{}', '{}')
              RETURNING id`
         );
 
@@ -89,7 +89,7 @@ export class SetupShippingMethod1741795000000 implements MigrationInterface {
             // Create Paystack payment method
             const paymentMethodResult = await queryRunner.query(
                 `INSERT INTO payment_method ("createdAt", "updatedAt", code, enabled, handler)
-                 VALUES (NOW(), NOW(), 'paystack', true, 'paystack')
+                 VALUES (NOW(), NOW(), 'paystack', true, '{}')
                  RETURNING id`
             );
 
