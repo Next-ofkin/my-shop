@@ -49,7 +49,7 @@ export const paystackPaymentHandler = new PaymentMethodHandler({
         if (!paystackService) {
             return {
                 amount: order.total,
-                state: 'Failed',
+                state: 'Cancelled',
                 metadata: {
                     errorMessage: 'Paystack service not initialized',
                 },
@@ -94,10 +94,10 @@ export const paystackPaymentHandler = new PaymentMethodHandler({
                     redirectUrl: result.data.authorization_url,
                 },
             };
-        } catch (error) {
+        } catch (error: any) {
             return {
                 amount: order.total,
-                state: 'Failed',
+                state: 'Cancelled',
                 metadata: {
                     errorMessage: error.message,
                 },
@@ -161,7 +161,7 @@ export const paystackPaymentHandler = new PaymentMethodHandler({
                     },
                 };
             }
-        } catch (error) {
+        } catch (error: any) {
             return {
                 success: false,
                 metadata: {

@@ -9,7 +9,6 @@ import {
 
 @Injectable()
 export class PaystackService {
-    private readonly logger = new Logger(PaystackService.name);
     private readonly baseUrl = 'https://api.paystack.co';
 
     constructor(private config: PaystackConfig) {}
@@ -46,13 +45,13 @@ export class PaystackService {
             const data = await response.json();
             
             if (!data.status) {
-                this.logger.error(`Paystack initialization failed: ${data.message}`);
+                Logger.error(`Paystack initialization failed: ${data.message}`, 'PaystackService');
                 throw new Error(data.message);
             }
 
             return data;
-        } catch (error) {
-            this.logger.error(`Failed to initialize Paystack transaction: ${error.message}`);
+        } catch (error: any) {
+            Logger.error(`Failed to initialize Paystack transaction: ${error.message}`, 'PaystackService');
             throw error;
         }
     }
@@ -75,8 +74,8 @@ export class PaystackService {
 
             const data = await response.json();
             return data;
-        } catch (error) {
-            this.logger.error(`Failed to verify Paystack transaction: ${error.message}`);
+        } catch (error: any) {
+            Logger.error(`Failed to verify Paystack transaction: ${error.message}`, 'PaystackService');
             throw error;
         }
     }
@@ -87,16 +86,16 @@ export class PaystackService {
     handleWebhook(event: PaystackWebhookEvent): { success: boolean; reference: string } {
         const { event: eventType, data } = event;
 
-        this.logger.info(`Received Paystack webhook: ${eventType}`);
+        Logger.info(`Received Paystack webhook: ${eventType}`, 'PaystackService');
 
         switch (eventType) {
             case 'charge.success':
                 return { success: true, reference: data.reference };
             case 'charge.failed':
-                this.logger.warn(`Payment failed for reference: ${data.reference}`);
+                Logger.warn(`Payment failed for reference: ${data.reference}`);
                 return { success: false, reference: data.reference };
             default:
-                this.logger.info(`Unhandled webhook event: ${eventType}`);
+                Logger.info(`Unhandled webhook event: ${eventType}`);
                 return { success: false, reference: data.reference };
         }
     }
