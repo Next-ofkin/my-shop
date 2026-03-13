@@ -47,11 +47,13 @@ export interface PaystackPluginOptions {
                         'PaystackPlugin'
                     );
                     // Return a dummy service that will fail gracefully
-                    return new PaystackService({
+                    const dummyService = new PaystackService({
                         secretKey: 'dummy_key',
                         publicKey: publicKey || '',
                         callbackUrl: process.env.PAYSTACK_CALLBACK_URL || '',
                     });
+                    (global as any).paystackService = dummyService;
+                    return dummyService;
                 }
 
                 // Store service globally so handler can access it
