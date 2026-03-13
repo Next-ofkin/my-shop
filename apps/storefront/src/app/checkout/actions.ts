@@ -29,25 +29,42 @@ export async function setShippingAddress(
     shippingAddress: AddressInput,
     useSameForBilling: boolean
 ) {
-    const shippingResult = await mutate(
-        SetOrderShippingAddressMutation,
-        {input: shippingAddress},
-        {useAuthToken: true}
-    );
-
-    if (shippingResult.data.setOrderShippingAddress.__typename !== 'Order') {
-        throw new Error('Failed to set shipping address');
-    }
-
-    if (useSameForBilling) {
-        await mutate(
-            SetOrderBillingAddressMutation,
+    try {
+        const shippingResult = await mutate(
+            SetOrderShippingAddressMutation,
             {input: shippingAddress},
             {useAuthToken: true}
         );
-    }
 
-    revalidatePath('/checkout');
+        const response = shippingResult.data.setOrderShippingAddress;
+
+        if (response.__typename !== 'Order') {
+            // Log the actual error for debugging
+            console.error('Shipping address error:', response);
+            const errorMessage = (response as any).message || 'Failed to set shipping address';
+            throw new Error(errorMessage);
+        }
+
+        if (useSameForBilling) {
+            const billingResult = await mutate(
+                SetOrderBillingAddressMutation,
+                {input: shippingAddress},
+                {useAuthToken: true}
+            );
+            
+            const billingResponse = billingResult.data.setOrderBillingAddress;
+            if (billingResponse.__typename !== 'Order') {
+                console.error('Billing address error:', billingResponse);
+                const errorMessage = (billingResponse as any).message || 'Failed to set billing address';
+                throw new Error(errorMessage);
+            }
+        }
+
+        revalidatePath('/checkout');
+    } catch (error: any) {
+        console.error('setShippingAddress error:', error);
+        throw error;
+    }
 }
 
 export async function setShippingMethod(shippingMethodId: string) {
