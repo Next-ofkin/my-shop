@@ -30,6 +30,8 @@ export async function setShippingAddress(
     useSameForBilling: boolean
 ) {
     try {
+        console.log('Setting shipping address:', shippingAddress);
+        
         const shippingResult = await mutate(
             SetOrderShippingAddressMutation,
             {input: shippingAddress},
@@ -37,9 +39,9 @@ export async function setShippingAddress(
         );
 
         const response = shippingResult.data.setOrderShippingAddress;
+        console.log('Shipping address response:', response);
 
         if (response.__typename !== 'Order') {
-            // Log the actual error for debugging
             console.error('Shipping address error:', response);
             const errorMessage = (response as any).message || 'Failed to set shipping address';
             throw new Error(errorMessage);
@@ -53,6 +55,8 @@ export async function setShippingAddress(
             );
             
             const billingResponse = billingResult.data.setOrderBillingAddress;
+            console.log('Billing address response:', billingResponse);
+            
             if (billingResponse.__typename !== 'Order') {
                 console.error('Billing address error:', billingResponse);
                 const errorMessage = (billingResponse as any).message || 'Failed to set billing address';
@@ -60,10 +64,14 @@ export async function setShippingAddress(
             }
         }
 
-        revalidatePath('/checkout');
+        try {
+            revalidatePath('/checkout');
+        } catch (revError) {
+            console.error('Revalidate error:', revError);
+        }
     } catch (error: any) {
         console.error('setShippingAddress error:', error);
-        throw error;
+        throw new Error(`Failed to save address: ${error.message}`);
     }
 }
 

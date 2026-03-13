@@ -23,8 +23,14 @@ export async function getAvailableCountriesCached() {
     cacheLife('max');
     cacheTag('countries');
 
-    const result = await query(GetAvailableCountriesQuery);
-    return result.data.availableCountries || [];
+    try {
+        const result = await query(GetAvailableCountriesQuery);
+        console.log('Available countries:', result.data.availableCountries);
+        return result.data.availableCountries || [];
+    } catch (error: any) {
+        console.error('Error fetching countries:', error);
+        return [];
+    }
 }
 
 /**
